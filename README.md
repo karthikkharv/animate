@@ -1,6 +1,11 @@
-# React + Vite
+# 1. Clone the repository
+git clone https://github.com/karthikkharv/animate.git
 
-git clone url
+# 2. Navigate to the project directory
 cd animate/my-react-app
-npm i
+
+# 3. Install all dependencies
+npm install
+
+# 4. Start the development server
 npm run dev
