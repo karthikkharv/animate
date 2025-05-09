@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
+import "./App.css"
 export default function App() {
   const mountRef = useRef(null);
   const selectedRef = useRef(null);
@@ -18,7 +18,7 @@ export default function App() {
       0.1,
       100
     );
-    camera.position.set(0, 5, 10);
+    camera.position.set(0, 5, 15);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -51,20 +51,25 @@ export default function App() {
       scene.add(mesh);
       objects.push(mesh);
 
-      // Store the original color for resetting later
       originalColors.current[mesh] = color;
     };
 
-    // Adding different geometries, spaced evenly
-    const colors = [0xff0000, 0x00ff00, 0xffa500, 0xffff00, 0x00ffff];
-    const spacing = 4; // Space between objects
+    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+    const spacing = 4;
 
-    // Distribute objects evenly along X-axis
-    addObject(new THREE.BoxGeometry(1, 1, 1), colors[0], [-spacing * 2, 0, 0]);
-    addObject(new THREE.SphereGeometry(0.75, 32, 32), colors[1], [-spacing, 0, 0]);
-    addObject(new THREE.TorusGeometry(0.7, 0.2, 16, 100), colors[2], [0, 0, 0]);
-    addObject(new THREE.CylinderGeometry(0.5, 0.5, 2, 32), colors[3], [spacing, 0, 0]);
-    addObject(new THREE.ConeGeometry(0.7, 1.5, 32), colors[4], [spacing * 2, 0, 0]);
+    addObject(new THREE.SphereGeometry(0.75, 32, 32), colors[0], [-spacing * 2, 0, 0]);
+    addObject(new THREE.CylinderGeometry(0.5, 0.5, 2, 32), colors[1], [-spacing, 0, 0]);
+    addObject(new THREE.ConeGeometry(0.7, 1.5, 32), colors[2], [0, 0, 0]);
+    addObject(
+      new THREE.LatheGeometry([
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(0.3, 0.5),
+        new THREE.Vector2(0.2, 1)
+      ]),
+      colors[3],
+      [spacing, 0, 0]
+    );
+    addObject(new THREE.CapsuleGeometry(0.3, 1, 4, 8), colors[4], [spacing * 2, 0, 0]);
 
     // Raycaster
     const raycaster = new THREE.Raycaster();
@@ -79,51 +84,35 @@ export default function App() {
       const bounds = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
       mouse.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-    
+
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(objects);
-    
-      // Reset all objects to their original color and remove unique properties
+
       objects.forEach((obj, index) => {
-        // Reset the color to its original color
         obj.material.color.set(colors[index]);
-    
-        // Remove wireframe and outline if exists
         obj.material.wireframe = false;
         if (obj.userData.outline) {
-          scene.remove(obj.userData.outline); // Remove the outline if it exists
-          obj.userData.outline = null; // Clear reference to the outline
+          scene.remove(obj.userData.outline);
+          obj.userData.outline = null;
         }
       });
-    
-      // If a new object is clicked
+
       if (intersects.length > 0) {
         const selected = intersects[0].object;
-    
-        // Change color of the clicked object (highlighting)
-        selected.material.color.set(0xffffff); // Highlight color (e.g., white)
-    
-        // Set rotation direction to reverse
+        selected.material.color.set(0xffffff);
         selected.userData.rotateDirection = -1;
-    
-        // Create and apply outline effect
+
         const outline = new THREE.Mesh(selected.geometry, outlineMaterial);
-        // outline.scale.set(1.05, 1.05, 1.05);
         outline.position.copy(selected.position);
         outline.rotation.copy(selected.rotation);
         outline.quaternion.copy(selected.quaternion);
-    
+
         scene.add(outline);
-        selected.userData.outline = outline; // Store the outline for future removal
-    
-        // Add wireframe effect to make it visually distinct
+        selected.userData.outline = outline;
         selected.material.wireframe = true;
-    
-        // Store the selected object reference
         selectedRef.current = { object: selected, outline };
       }
     };
-    
 
     renderer.domElement.addEventListener("click", onClick);
 
@@ -132,9 +121,9 @@ export default function App() {
 
       objects.forEach((obj) => {
         if (obj.userData.rotateDirection === -1) {
-          obj.rotation.y -= 0.005; // Reverse rotation when selected
+          obj.rotation.y -= 0.005;
         } else {
-          obj.rotation.y += 0.005; // Normal rotation for other objects
+          obj.rotation.y += 0.005;
         }
       });
 
